@@ -31,11 +31,11 @@ public class Selector : MonoBehaviour {
 				//Debug.Log("null")
 				return;
 			}
-			
+            Cell newCell;
 				deletePlaceholders();
-				if(ShowObject(c,selectedObject)){
+				if(ShowObject(c,selectedObject,out newCell)){
 					if(Input.GetMouseButtonDown(0)){
-							PlaceObject(c,selectedObject);
+							PlaceObject(newCell, selectedObject);
 					}
 				}
 			
@@ -112,13 +112,11 @@ public class Selector : MonoBehaviour {
 
 //TRANSFERABLE TO OBJECTS OR GRID CLASS?
 	 void PlaceObject(Cell c,Objects obj ){
-		/*
-		 float x = (grid.startPt.x + ((c.row+1)*grid.cellSize.x)) + (grid.offset.x*c.row);
-		 float y = grid.startPt.y + grid.offset.y + grid.cellSize.y + (showObj.transform.localScale.y /2);
-		 float z = (grid.startPt.z + ((c.col+1)*grid.cellSize.z)) + (grid.offset.z*c.col);
-
-		// -gridLength/2 + 0.5f +i,0,-gridWidth/2 + 0.5f + j
-		
+   
+        float x, y, z;
+		x = -grid.gridLength/2 + 0.5f + c.row;
+		y = c.h + grid.cellSize.y / 2;
+		z = -grid.gridWidth/2 + 0.5f + c.col;
 	
 
 		GameObject go  = Instantiate(selectedObject.prefab,new Vector3(x,y,z),Quaternion.identity);
@@ -130,17 +128,20 @@ public class Selector : MonoBehaviour {
 		newObj.centerCol = c.col;
 		grid.gridObjects.Add(newObj);
 
-		foreach(Unit unit in obj.dimension.units)
-		 {
-			 
-		 ToggleObject(grid.gridCells[c.row + unit.row,c.col + unit.col]);
-		 }
- */
-		 
-	 }
+        for (int i = c.h; i < obj.dimension.height + c.h; i++)
+        {
 
-	 void DeleteObject(Transform trans){
-/* 
+            foreach (Unit unit in obj.dimension.units)
+            {
+
+                ToggleObject(grid.gridCells[c.row + unit.row, c.col + unit.col,i]);
+            }
+        }
+ 
+    }
+
+    void DeleteObject(Transform trans){
+        /*
 		 Objects obj = trans.gameObject.GetComponent<Objects>();
 		 //clear occupation from grid
 		 foreach (Unit unit in obj.dimension.units)
@@ -152,12 +153,10 @@ public class Selector : MonoBehaviour {
 		 Destroy(trans.gameObject);
 
 		 Debug.Log("deleted");
-		*/ 
+         */
 	 }
 
-	 bool ShowObject(Cell c, Objects obj){
-
-
+	 bool ShowObject(Cell c, Objects obj, out Cell newCell){
         int h = GetHeight(c);
 //display placeholders
 
@@ -170,12 +169,7 @@ public class Selector : MonoBehaviour {
 			foreach(Unit unit in obj.dimension.units)
 			{
 				//position
-				/* 
-				x = (grid.startPt.x + ((c.row+ unit.row+1)*grid.cellSize.x)) + (grid.offset.x*(c.row+ unit.row));
-				y = grid.startPt.y + grid.offset.y + (showObj.transform.localScale.y /2) ;
-				z = (grid.startPt.z + ((c.col+ unit.col+1)*grid.cellSize.z)) + (grid.offset.z*(c.col+ unit.col));
-				/ -gridLength/2 + 0.5f +i,0,-gridWidth/2 + 0.5f + j
-				*/
+				
 				x = -grid.gridLength/2 + 0.5f + c.row + unit.row;
 				y = i + grid.cellSize.y / 2;
 				z = -grid.gridWidth/2 + 0.5f + c.col + unit.col;
@@ -219,6 +213,8 @@ public class Selector : MonoBehaviour {
 			
 		objPlaceholder.transform.rotation = objTrans.transform.rotation;
 		placeholders.Add(objPlaceholder);
+
+        newCell = grid.gridCells[c.row, c.col, h];
 		return isPlaceable;
 	 }
 
@@ -247,7 +243,7 @@ public class Selector : MonoBehaviour {
 					else{//not occupied
 						if(h>0){//check under
 								if(grid.gridCells[row,col,h-1].isOccupied)//if occupied
-								return false;
+								return false; //check here if overlayable 
 								else//if not occupied
 								return true;
 
